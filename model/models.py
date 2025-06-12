@@ -1,7 +1,9 @@
 from helper import *
 from model.compgcn_conv import CompGCNConv
-from model.compgcn_conv_basis import CompGCNConvBasis
 
+from model.compgcn_conv_basis import CompGCNConvBasis
+from model.relawarecompgcn_conv import RelAwareCompGCNConv
+from model.relawaremultihopcg_conv import RelAwareMultiHopCompGCNConv
 class BaseModel(torch.nn.Module):
 	def __init__(self, params):
 		super(BaseModel, self).__init__()
@@ -23,18 +25,35 @@ class CompGCNBase(BaseModel):
 		self.init_embed		= get_param((self.p.num_ent,   self.p.init_dim))
 		self.device		= self.edge_index.device
 
+		# 初始化时自动对齐实体和关系嵌入维度
+        # if self.init_embed.shape[1] != self.init_rel.shape[1]:
+			
+		# 	min_dim = min(self.init_embed.shape[1], self.init_rel.shape[1])
+        #     self.init_embed = self.init_embed[:, :min_dim]
+        #     self.init_rel = self.init_rel[:, :min_dim]
+        #     print(f"[WARN] 嵌入维度不一致，已对齐至: {min_dim}")
+
 		if self.p.num_bases > 0:
 			self.init_rel  = get_param((self.p.num_bases,   self.p.init_dim))
 		else:
 			if self.p.score_func == 'transe': 	self.init_rel = get_param((num_rel,   self.p.init_dim))
 			else: 					self.init_rel = get_param((num_rel*2, self.p.init_dim))
 
+		
+        
+
 		if self.p.num_bases > 0:
 			self.conv1 = CompGCNConvBasis(self.p.init_dim, self.p.gcn_dim, num_rel, self.p.num_bases, act=self.act, params=self.p)
-			self.conv2 = CompGCNConv(self.p.gcn_dim,    self.p.embed_dim,    num_rel, act=self.act, params=self.p) if self.p.gcn_layer == 2 else None
+			# self.conv1 = RelAwareMultiHopCompGCNConv(self.p.init_dim, self.p.gcn_dim, num_rel, self.p.num_bases, act=self.act, params=self.p)
+			# self.conv2 = CompGCNConv(self.p.gcn_dim,    self.p.embed_dim,    num_rel, act=self.act, params=self.p) if self.p.gcn_layer == 2 else None
+			self.conv2 = RelAwareMultiHopCompGCNConv(self.p.gcn_dim,    self.p.embed_dim,    num_rel, act=self.act, params=self.p) if self.p.gcn_layer == 2 else None
+
 		else:
-			self.conv1 = CompGCNConv(self.p.init_dim, self.p.gcn_dim,      num_rel, act=self.act, params=self.p)
-			self.conv2 = CompGCNConv(self.p.gcn_dim,    self.p.embed_dim,    num_rel, act=self.act, params=self.p) if self.p.gcn_layer == 2 else None
+			# self.conv1 = CompGCNConv(self.p.init_dim, self.p.gcn_dim,      num_rel, act=self.act, params=self.p)
+			# self.conv2 = CompGCNConv(self.p.gcn_dim,    self.p.embed_dim,    num_rel, act=self.act, params=self.p) if self.p.gcn_layer == 2 else None
+			self.conv1 = RelAwareMultiHopCompGCNConv(self.p.init_dim, self.p.gcn_dim,      num_rel, act=self.act,  params=self.p)
+			self.conv2 = RelAwareMultiHopCompGCNConv(self.p.gcn_dim,    self.p.embed_dim,    num_rel, act=self.act, params=self.p) if self.p.gcn_layer == 2 else None
+
 
 		self.register_parameter('bias', Parameter(torch.zeros(self.p.num_ent)))
 

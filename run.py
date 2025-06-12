@@ -428,7 +428,7 @@ if __name__ == '__main__':
 	parser.add_argument('-restore',         dest='restore',         action='store_true',            help='Restore from the previously saved model')
 	parser.add_argument('-bias',            dest='bias',            action='store_true',            help='Whether to use bias in the model')
 
-	parser.add_argument('-num_bases',	dest='num_bases', 	default=-1,   	type=int, 	help='Number of basis relation vectors to use')
+	parser.add_argument('-num_bases',	dest='num_bases', 	default=10,   	type=int, 	help='Number of basis relation vectors to use')
 	parser.add_argument('-init_dim',	dest='init_dim',	default=100,	type=int,	help='Initial dimension size for entities and relations')
 	parser.add_argument('-gcn_dim',	  	dest='gcn_dim', 	default=200,   	type=int, 	help='Number of hidden units in GCN')
 	parser.add_argument('-embed_dim',	dest='embed_dim', 	default=None,   type=int, 	help='Embedding dimension to give as input to score function')
@@ -446,6 +446,7 @@ if __name__ == '__main__':
 
 	parser.add_argument('-logdir',          dest='log_dir',         default='./log/',               help='Log directory')
 	parser.add_argument('-config',          dest='config_dir',      default='./config/',            help='Config directory')
+	parser.add_argument('--num_hops', type=int, default=2)
 	args = parser.parse_args()
 
 	if not args.restore: args.name = args.name + '_' + time.strftime('%d_%m_%Y') + '_' + time.strftime('%H:%M:%S')
